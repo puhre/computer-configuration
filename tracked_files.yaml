@@ -1,0 +1,25 @@
+## Tracked files
+#
+# Syntax:
+#
+# <group>:
+# - local: <repo-path>
+#   host: <host-path>
+# ...
+#
+# <group-1>:
+# ...
+
+generic:
+  - local: files/bash_config/.bash_aliases
+    host: ${HOME}/.bash_aliases
+  - local: files/bash_config/.bash_secrets
+    host: ${HOME}/.bash_secrets
+  - local: files/bash_config/.bashrc
+    host: ${HOME}/.bashrc
+
+work:
+  - local: files/work-only/print-file
+    host: ${HOME}/.local/bin/print-file
+  - local: files/work-only/work
+    host: ${HOME}/.local/bin/work
