@@ -8,12 +8,13 @@ parse_args() {
     HELP_MESSAGE=`mktemp`
     cat <<EOF > $HELP_MESSAGE
 run [GROUP]
-    -f, --force           No dry-run
-    -i, --install         Install files from repo onto host machine
-    -u, --update          Update files in repo with files from host machine
-    -c, --commit=[BRANCH] Commit changes to specified branch
-    -p, --push=[BRANCH]   Commit and push changes to specified branch, if branch is
-                          not already checked out the script will fail.
+    -f, --force             No dry-run
+    -i, --install           Install files from repo onto host machine
+    -u, --update            Update files in repo with files from host machine
+    -c, --commit=[BRANCH]   Commit changes to specified branch
+    -p, --push=[BRANCH]     Commit and push changes to specified branch, if branch is
+                            not already checked out the script will fail.
+    --config=[CONFIG_FILE]  Path to config file, defaults to ./tracked-files.yaml
 EOF
     shopt -s extglob;
     POSITIONAL=()
@@ -67,6 +68,19 @@ EOF
             shift
             shift
             ;;
+            --config=[A-Za-z-]*)
+            CONFIG_FILE_ORIG=${1#*=}
+            shift
+            ;;
+            --config)
+            if [[ $# -lt 2 ]]; then
+              error "No config file defined"
+              exit 1
+            fi
+            CONFIG_FILE_ORIG=$2
+            shift
+            shift
+            ;;
             -h|--help)
             cat $HELP_MESSAGE
             rm $HELP_MESSAGE
@@ -102,6 +116,11 @@ EOF
 
     if [[ $GIT_COMMIT == true && $BRANCH == "" || $GIT_PUSH == true && $BRANCH == "" ]]; then
       error "No branch defined"
+      return 1
+    fi
+    
+    if [[ ! -f ${CONFIG_FILE_ORIG} ]]; then
+      error "No file at ${CONFIG_FILE_ORIG}"
       return 1
     fi
 }

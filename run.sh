@@ -9,12 +9,12 @@ INSTALL=false
 UPDATE=true
 GIT_COMMIT=false
 GIT_PUSH=false
+CONF_FILE_ORIG=./tracked_files.yaml
 BRANCH=
 _GROUPS=()
 
 
-CONF_FILE_ORIG=./tracked_files.yaml
-export CONF_FILE=./tracked_files.yaml.tmp
+export CONF_FILE=${CONFIG_FILE_ORIG}.tmp
 cat $CONF_FILE_ORIG | envsubst > $CONF_FILE
 
 source src/helper_functions.sh
