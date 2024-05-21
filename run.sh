@@ -3,6 +3,8 @@
 ## This file installs all tracked files on the local system
 set -e
 
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
 ## Defaults
 DRY_RUN=true
 INSTALL=false
@@ -17,7 +19,7 @@ CONF_FILE_ORIG=./tracked_files.yaml
 export CONF_FILE=./tracked_files.yaml.tmp
 cat $CONF_FILE_ORIG | envsubst > $CONF_FILE
 
-source src/helper_functions.sh
+source ${SCRIPT_DIR}/src/helper_functions.sh
 
 parse_args $@
 
