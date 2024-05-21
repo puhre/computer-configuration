@@ -39,3 +39,8 @@ work:
 # Save files top repo
 ./run.sh --update --force <group>
 ```
+
+## Run as cron
+```
+0 * * * *   <path-to-project>/run.sh --update --push=from-laptop work generic <...groups>
+```

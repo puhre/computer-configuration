@@ -8,10 +8,14 @@ parse_args() {
     HELP_MESSAGE=`mktemp`
     cat <<EOF > $HELP_MESSAGE
 run [GROUP]
-    -f, --force         No dry-run
-    -i, --install       Install files from repo onto host machine
-    -u, --update        Update files in repo with files from host machine
+    -f, --force           No dry-run
+    -i, --install         Install files from repo onto host machine
+    -u, --update          Update files in repo with files from host machine
+    -c, --commit=[BRANCH] Commit changes to specified branch
+    -p, --push=[BRANCH]   Commit and push changes to specified branch, if branch is
+                          not already checked out the script will fail.
 EOF
+    shopt -s extglob;
     POSITIONAL=()
     while [[ $# -gt 0 ]]; do
         key="$1"
@@ -31,6 +35,38 @@ EOF
             INSTALL=false
             shift
             ;;
+            --commit=[A-Za-z-]*)
+            GIT_COMMIT=true
+            BRANCH=${1#*=}
+            shift
+            ;;
+            -c|--commit)
+            if [[ $# -lt 2 ]]; then
+              error "No branch defined"
+              exit 1
+            fi
+            GIT_COMMIT=true
+            BRANCH=$2
+            shift
+            shift
+            ;;
+            --push=[A-Za-z-]*)
+            GIT_COMMIT=true
+            GIT_PUSH=true
+            BRANCH=${1#*=}
+            shift
+            ;;
+            -p|--push)
+            if [[ $# -lt 2 ]]; then
+              error "No branch defined"
+              exit 1
+            fi
+            GIT_COMMIT=true
+            GIT_PUSH=true
+            BRANCH=$2
+            shift
+            shift
+            ;;
             -h|--help)
             cat $HELP_MESSAGE
             rm $HELP_MESSAGE
@@ -42,25 +78,31 @@ EOF
             ;;
         esac
     done
+    shopt -u extglob;
 
     if [[ ${#POSITIONAL[@]} -eq 0 ]]; then
         error "No group provided"
         return 1
     fi
 
-    local positional_arg=${POSITIONAL[0]}
-
     local groups=(`yq keys[] ${CONF_FILE} -r`)
-    for group in ${groups[@]}; do
-        if [[ $group == $positional_arg ]]; then
-            error "Processing group '$group'"
-            GROUP=$group
-        fi
+    for positional_arg in ${POSITIONAL[*]}; do
+      for group in ${groups[@]}; do
+          if [[ $group == $positional_arg ]]; then
+              error "Processing group '$group'"
+              _GROUPS+=($group)
+          fi
+      done
     done
 
-    if [[ -z $GROUP ]]; then
-        error "Argument '$positional_arg' is not in list of defined groups" 1
+    if [[ ${#_GROUPS[*]} -eq 0 ]]; then
+        error "Argument '${POSITIONAL[@]}' is not in list of defined groups" 1
         return 1
+    fi
+
+    if [[ $GIT_COMMIT == true && $BRANCH == "" || $GIT_PUSH == true && $BRANCH == "" ]]; then
+      error "No branch defined"
+      return 1
     fi
 }
 
@@ -88,6 +130,7 @@ copy_from_to() {
     fi
 
     if [[ $DRY_RUN != true ]]; then
+        mkdir -p `dirname $2`
         cp $1 $2
     else
         echo "Copying file '$1' to '$2'"
