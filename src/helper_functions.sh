@@ -27,8 +27,8 @@ EOF
             shift
             ;;
             -i|--install)
-            INSTALL=false
-            UPDATE=true
+            INSTALL=true
+            UPDATE=false
             shift
             ;;
             -u|--update)
